@@ -1,0 +1,10 @@
+.friend-screen { width: 100%; max-width: 375px; height: 100vh; max-height: 812px; margin: 0 auto; position: relative; overflow: hidden; background: linear-gradient(to bottom, #e7a6b9, #bda1dc); }
+.friend-content { position: absolute; top: 50px; width: 100%; text-align: center; color: white; z-index: 10; }
+.friend-content h1 { font-size: 18px; font-weight: 500; margin-bottom: 20px; color: white; transform: translateY(-5px); }
+.friend-content p { font-size: 12px; opacity: 0.9; margin-bottom: 20px; color: white; }
+.search-box { width: 280px; height: 42px; margin: 0 auto; background: #eee; border-radius: 25px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+.search-box input { border: none; background: transparent; width: 85%; outline: none; font-size: 14px; }
+.search-icon { width: 16px; height: 16px; border: 2px solid #222; border-radius: 50%; position: relative; cursor: pointer; transform: scale(0.8); top: -3px; }
+.search-icon::after { content: ""; position: absolute; width: 8px; height: 2px; background: #222; bottom: -4px; right: -4px; transform: rotate(45deg); }
+.friend-card { position: absolute; top: 160px; left: 50%; transform: translateX(-50%); width: 300px; padding: 20px; }
+.friend-button { display: block; width: 100%; padding: 15px; margin: 10px 0; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-size: 16px; border: none; cursor: pointer; }

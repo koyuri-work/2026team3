@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
+
+.diagnosis-screen { width: 100%; max-width: 375px; height: 100vh; margin: 0 auto; background: linear-gradient(to bottom, #bfa9c9, #7b80c9); position: relative; overflow-y: auto; overflow-x: hidden; font-family: "Hiragino Sans", "Noto Sans JP", sans-serif; }
+.diagnosis-header { position: absolute; top: 40px; width: 100%; z-index: 10; }
+.diagnosis-back { position: absolute; left: 24px; width: 32px; height: 32px; border: 2px solid white; border-radius: 50%; cursor: pointer; }
+.diagnosis-back::after { content: ""; position: absolute; width: 8px; height: 8px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(45deg); top: 10px; left: 16px; }
+.diagnosis-menu { position: absolute; right: 24px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+.diagnosis-menu span { width: 22px; height: 2px; background: white; }
+.diagnosis-subtitle { position: absolute; top: 70px; width: 100%; text-align: center; font-size: 12px; color: white; opacity: .8; }
+.diagnosis-title { position: absolute; top: 80px; width: 100%; text-align: center; font-size: 40px; font-family: "Dancing Script", cursive; color: #2e2157; }
+.diagnosis-card { position: relative; margin: 160px auto 40px; width: 300px; height: auto; background: #e6e4ee; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,.2); padding: 20px; box-sizing: border-box; }
+.diagnosis-question-item { padding: 14px 0; border-bottom: 1px solid #ccc; }
+.diagnosis-question-item p { font-size: 16px; text-align: center; margin: 0 0 15px 0; color: #333; font-weight: 500; }
+.diagnosis-choices { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 300px; margin: 0 auto; padding-bottom: 20px; }
+.diagnosis-choice-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; }
+.diagnosis-label { position: absolute; top: 100%; margin-top: 6px; font-size: 10px; color: #999; white-space: nowrap; }
+.diagnosis-img { object-fit: contain; cursor: pointer; transition: transform 0.2s, opacity 0.2s; opacity: 0.6; }
+.diagnosis-img:hover { transform: scale(1.1); opacity: 0.8; }
+.diagnosis-img.selected { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+.diagnosis-img-1 { width: 45px; height: 45px; }
+.diagnosis-img-2 { width: 35px; height: 35px; }
+.diagnosis-img-3 { width: 25px; height: 25px; }
+.diagnosis-img-4 { width: 35px; height: 35px; }
+.diagnosis-img-5 { width: 45px; height: 45px; }
+.diagnosis-next-btn { display: block; margin: 40px auto 10px auto; width: 200px; height: 40px; border: none; outline: none; border-radius: 20px; background: #8c7dc8; box-shadow: 0 3px 6px rgba(0,0,0,.2); font-size: 14px; color: white; cursor: pointer; transition: all 0.3s; -webkit-tap-highlight-color: transparent; }
+.diagnosis-next-btn:focus { outline: none; }
+.diagnosis-next-btn:disabled { background: #ddd; color: #5e4f9a; opacity: 0.6; cursor: not-allowed; }

@@ -1,0 +1,15 @@
+.auth-wrapper { display: flex; justifyContent: center; alignItems: center; min-height: 100vh; background-color: #000; font-family: "Georgia", serif; }
+.auth-screen { width: 100%; max-width: 375px; height: 100vh; max-height: 812px; background-color: #f6f6f6; position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+.auth-top-wave { position: absolute; top: -80px; right: -100px; width: 500px; height: 300px; background-color: #4b4b5f; border-bottom-left-radius: 300px; z-index: 1; }
+.auth-circle { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); width: 230px; height: 230px; border-radius: 50%; background: radial-gradient(circle at top left, #cfc8ff, #f5b8cc); z-index: 2; box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+.auth-title { position: absolute; top: 245px; left: 60px; font-size: 34px; letter-spacing: 3px; color: #2d2d5a; z-index: 3; font-weight: bold; }
+.auth-puzzle-big { position: absolute; top: 300px; right: 40px; width: 120px; height: 120px; z-index: 2; object-fit: contain; filter: drop-shadow(-6px -6px 5px rgba(0,0,0,0.2)); }
+.auth-puzzle-small { position: absolute; top: 180px; right: 100px; width: 60px; height: 60px; z-index: 2; object-fit: contain; filter: drop-shadow(-6px 6px 5px rgba(0,0,0,0.2)); }
+.auth-form-container { position: absolute; bottom: -20px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; z-index: 10; }
+.auth-input { width: 260px; height: 44px; border-radius: 22px; background: #fff; border: none; padding-left: 20px; color: #555; font-size: 14px; box-shadow: 0 3px 6px rgba(0,0,0,0.08); outline: none; box-sizing: border-box; font-family: "Georgia", serif; }
+.auth-submit-button { width: 260px; height: 44px; border-radius: 22px; background: linear-gradient(to right, #aa92f8, #c4b3ff); display: flex; justify-content: center; align-items: center; color: #fff; font-size: 14px; border: none; cursor: pointer; font-family: "Georgia", serif; box-shadow: 0 3px 6px rgba(0,0,0,0.2); font-weight: bold; }
+.auth-divider { display: flex; align-items: center; width: 260px; margin: 5px 0; }
+.auth-line { flex: 1; height: 1px; background: #aaa; }
+.auth-or-text { font-size: 13px; color: #777; padding: 0 10px; }
+.auth-toggle-button { background: none; border: none; color: #777; text-decoration: underline; cursor: pointer; font-size: 12px; font-family: "Georgia", serif; }
+.auth-error-msg { color: #d9534f; font-size: 12px; text-align: center; width: 260px; margin-bottom: 5px; }
