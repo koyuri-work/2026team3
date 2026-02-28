@@ -66,10 +66,10 @@ const homeStyles = {
   screenBefore: { position: 'absolute', top: '-50%', left: 0, right: 0, bottom: '50%', backgroundImage: `url(${hosizoraImg})`, backgroundSize: 'cover', backgroundPosition: 'bottom', pointerEvents: 'none' },
   menu: { position: 'absolute', top: '40px', right: '24px', display: 'flex', flexDirection: 'column', gap: '6px', cursor: 'pointer', zIndex: 20 },
   menuSpan: { width: '24px', height: '3px', background: '#ddd', borderRadius: '3px' },
-  puzzleWrapper: { position: 'absolute', top: '140px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, cursor: 'pointer' },
+  puzzleWrapper: { position: 'absolute', top: '140px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 },
   puzzle: { width: '210px', height: '210px', position: 'relative', filter: 'drop-shadow(0 8px 15px rgba(0,0,0,0.3))', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   puzzleImg: { width: '100%', height: '100%', objectFit: 'contain' },
-  title: { position: 'absolute', top: '380px', width: '100%', textAlign: 'center', color: 'white', fontSize: '20px', letterSpacing: '2px', zIndex: 10, fontWeight: 'bold', cursor: 'pointer' },
+  title: { position: 'absolute', top: '380px', width: '100%', textAlign: 'center', color: 'white', fontSize: '20px', letterSpacing: '2px', zIndex: 10, fontWeight: 'bold' },
   cards: { position: 'absolute', bottom: '60px', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', padding: '0 32px', boxSizing: 'border-box', zIndex: 10 },
   card: { height: '140px', background: '#d6d3eb', borderRadius: '28px', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none', position: 'relative', paddingTop: '30px', boxSizing: 'border-box' },
   cardText: { marginTop: '12px', fontSize: '14px', color: '#5e4f9a', fontWeight: 'bold', transform: 'translateY(-15px)' },
@@ -101,6 +101,7 @@ const TYPE_IMAGES = {
   akegata: akegataImg,
   soutyou: soutyouImg,
   gozentyuu: gozentyuuImg,
+
   mahiru: mahiruImg,
   hakutyuu: hakutyuuImg,
   hirusagari: hirusagariImg,
@@ -126,6 +127,20 @@ const TYPE_DISPLAY_NAMES = {
   yohuke: '夜更けタイプ',
 };
 
+const TYPE_HOURS = {
+  yoakemae: 4,
+  akegata: 6,
+  soutyou: 8,
+  gozentyuu: 10,
+  mahiru: 12,
+  hakutyuu: 14,
+  hirusagari: 16,
+  yugata: 18,
+  higure: 20,
+  yohuke: 22,
+  mayonaka: 0,
+  sinya: 2,
+};
 const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -189,7 +204,6 @@ const Auth = () => {
 const Home = ({ session }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [latestType, setLatestType] = useState(null);
-  const [latestScores, setLatestScores] = useState(null);
   const navigate = useNavigate();
   const handleLogout = async () => { await supabase.auth.signOut(); };
 
@@ -198,24 +212,18 @@ const Home = ({ session }) => {
     const fetchLatestDiagnosis = async () => {
       const { data } = await supabase
         .from('diagnosis_results')
-        .select('result_key, scores')
+        .select('result_key')
         .eq('target_user_id', session.user.id)
+        .eq('created_by', session.user.id)
         .order('created_at', { ascending: false })
         .limit(1);
       if (data && data.length > 0) {
         const key = data[0].result_key;
         setLatestType(KEY_MAPPING[key] || key);
-        setLatestScores(data[0].scores);
       }
     };
     fetchLatestDiagnosis();
   }, [session]);
-
-  const handleResultClick = () => {
-    if (latestType && latestScores) {
-      navigate('/result', { state: { resultKey: latestType, scores: latestScores } });
-    }
-  };
 
   return (
     <div style={homeStyles.wrapper}>
@@ -229,18 +237,18 @@ const Home = ({ session }) => {
             <button onClick={handleLogout} style={{...styles.secondaryButton, margin: 0, fontSize: '12px'}}>ログアウト</button>
           </div>
         )}
-        <div style={homeStyles.puzzleWrapper} onClick={handleResultClick}>
+        <div style={homeStyles.puzzleWrapper}>
           <div style={homeStyles.puzzle}>
             <img src={(latestType && TYPE_IMAGES[latestType]) || homeImg} style={homeStyles.puzzleImg} alt="Diagnosis Type" />
           </div>
         </div>
-        <div style={homeStyles.title} onClick={handleResultClick}>{latestType ? TYPE_DISPLAY_NAMES[latestType] : '性格診断'}</div>
+        <div style={homeStyles.title}>{latestType ? TYPE_DISPLAY_NAMES[latestType] : '性格診断'}</div>
         <div style={homeStyles.cards}>
           <Link to="/diagnosis/self" style={homeStyles.card}>
             <div style={homeStyles.iconBase}><img src={puzzleIcon} alt="ひとりで" style={{width: '54px', height: '54px', objectFit: 'contain'}} /></div>
             <p style={homeStyles.cardText}>ひとりで</p>
           </Link>
-          <Link to="/diagnosis/friend" style={homeStyles.card}>
+          <Link to="/friend-select" style={homeStyles.card}>
             <div style={homeStyles.iconBase}><img src={multiIcon} alt="みんなで" style={{width: '81px', height: '81px', objectFit: 'contain'}} /></div>
             <p style={homeStyles.cardText}>みんなで</p>
           </Link>
@@ -270,7 +278,7 @@ const DiagnosisRadar = ({ scores }) => {
     <div style={{ width: '100%', height: 300 }}>
       <ResponsiveContainer>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-          <PolarGrid /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} /><PolarRadiusAxis angle={30} domain={[0, 5]} tickCount={6} />
+          <PolarGrid stroke="#fff" /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 12, fill: 'white' }} />
           <Radar name="Score" dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
         </RadarChart>
       </ResponsiveContainer>
@@ -283,6 +291,7 @@ const FriendSystem = ({ session }) => {
   const [searchResult, setSearchResult] = useState(null);
   const [message, setMessage] = useState('');
   const [requests, setRequests] = useState([]);
+  const navigate = useNavigate();
 
   const fetchRequests = async () => {
     try {
@@ -312,36 +321,99 @@ const FriendSystem = ({ session }) => {
   const acceptFriend = async (friendshipId) => {
     try {
       const { error } = await supabase.from('friendships').update({ status: 'accepted' }).eq('id', friendshipId);
-      if (error) throw error;
+       if (error) throw error;
       setMessage('承認しました！'); fetchRequests();
     } catch (err) { setMessage('失敗しました。'); }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>フレンド検索</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <input type="text" placeholder="友達のID" value={searchId} onChange={(e) => setSearchId(e.target.value)} style={styles.input} />
-          <button onClick={searchUser} style={{...styles.button, width: '100px'}}>検索</button>
+    <div style={homeStyles.wrapper}>
+      <div className="friend-screen">
+        <div className="friend-content">
+          <div className="compare-home" onClick={() => navigate('/')}></div>
+          <h1>フレンド追加</h1>
+          <p>相手の検索IDを入力してください</p>
+
+          <div className="search-box">
+            <input type="text" placeholder="検索用ID" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
+            <div className="search-icon" onClick={searchUser}></div>
+          </div>
+          {message && <p>{message}</p>}
+
+          {searchResult && (
+            <div style={{ marginTop: '20px', padding: '15px', background: '#eee', borderRadius: '10px', color: '#333', width: '280px', margin: '20px auto' }}>
+              <p style={{ fontSize: '1.1em' }}><strong>{searchResult.username}</strong> さん</p>
+              <button onClick={() => addFriend(searchResult.id)} style={{ ...styles.button, backgroundColor: '#8c7dc8' }}>申請する</button>
+            </div>
+          )}
+
+          <div style={{ marginTop: '30px', width: '90%', margin: '30px auto' }}>
+            {requests.length > 0 && <h3 style={{ color: '#333', fontSize: '16px', marginBottom: '10px' }}>届いているリクエスト</h3>}
+            {requests.map((req) => (
+              <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'white', marginBottom: '10px', borderRadius: '8px', color: '#333' }}>
+                <span><strong>{req.profiles.username}</strong></span>
+                <button onClick={() => acceptFriend(req.id)} style={{ ...styles.button, width: 'auto', padding: '8px 15px', margin: 0, backgroundColor: '#28a745', fontSize: '12px' }}>承認</button>
+              </div>
+            ))}
+          </div>
         </div>
-        {message && <p>{message}</p>}
-        {searchResult && (
-          <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #eee' }}>
-            <p><strong>{searchResult.username}</strong> さん</p>
-            <button onClick={() => addFriend(searchResult.id)} style={{...styles.button, backgroundColor: '#28a745'}}>申請する</button>
-          </div>
-        )}
-        <hr />
-        <h3>届いているリクエスト</h3>
-        {requests.map((req) => (
-          <div key={req.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px' }}>
-            <span><strong>{req.profiles.username}</strong></span>
-            <button onClick={() => acceptFriend(req.id)} style={{...styles.button, width: 'auto', backgroundColor: '#28a745'}}>承認</button>
-          </div>
-        ))}
       </div>
-      <Link to="/" style={styles.secondaryButton}>ホームに戻る</Link>
+    </div>
+  );
+};
+
+const FriendSelect = ({ session }) => {
+  const [friends, setFriends] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session) return;
+    const fetchFriends = async () => {
+      const { data: sent } = await supabase
+        .from('friendships')
+        .select('friend_id, status, profiles:friend_id(username, id)')
+        .eq('user_id', session.user.id)
+        .in('status', ['accepted', 'pending']);
+
+      const { data: received } = await supabase
+        .from('friendships')
+        .select('user_id, status, profiles:user_id(username, id)')
+        .eq('friend_id', session.user.id)
+        .in('status', ['accepted', 'pending']);
+
+      const formattedSent = (sent || []).map(f => ({ ...f.profiles, id: f.friend_id, status: f.status }));
+      const formattedReceived = (received || []).map(f => ({ ...f.profiles, id: f.user_id, status: f.status }));
+      setFriends([...formattedSent, ...formattedReceived]);
+    };
+    fetchFriends();
+  }, [session]);
+
+  return (
+    <div style={homeStyles.wrapper}>
+      <div className="friend-screen">
+        <div className="friend-content">
+          <div className="compare-home" onClick={() => navigate('/')}></div>
+          <h1>友達を選択</h1>
+          <p>診断する友達を選んでください</p>
+          <div style={{ marginTop: '20px', width: '90%', margin: '20px auto', maxHeight: '500px', overflowY: 'auto' }}>
+            {friends.map(friend => (
+              <div key={friend.id} style={{ padding: '15px', background: 'white', marginBottom: '10px', borderRadius: '10px', color: '#333', boxShadow: '0 4px 10px rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong>{friend.username} さん</strong>
+                {friend.status === 'accepted' ? (
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button onClick={() => navigate('/diagnosis/friend', { state: { targetFriend: friend } })} style={{...styles.button, width: 'auto', padding: '8px 15px', margin: 0, backgroundColor: 'transparent', border: '1px solid #8c7dc8', color: '#8c7dc8', fontSize: '12px'}}>診断する</button>
+                    <button onClick={() => navigate('/history', { state: { targetFriend: friend } })} style={{...styles.button, width: 'auto', padding: '8px 15px', margin: 0, backgroundColor: '#8c7dc8', color: 'white', fontSize: '12px'}}>結果を見る</button>
+                  </div>
+                ) : (
+                  <span style={{fontSize: '12px', color: '#888'}}>承認待ち</span>
+                )}
+              </div>
+            ))}
+            {friends.length === 0 && <p>友達がいません</p>}
+          </div>
+          <Link to="/friends" style={{...styles.button, backgroundColor: '#8c7dc8', width: '200px', margin: '20px auto', display: 'block', color: 'white', textDecoration: 'none', borderRadius: '20px', textAlign: 'center', padding: '10px 0', boxShadow: '0 4px 10px rgba(0,0,0,0.2)'}}>友達を追加する</Link>
+        </div>
+      </div>
     </div>
   );
 };
@@ -372,6 +444,7 @@ const determineType = (scores) => {
 const Diagnosis = ({ session }) => {
   const { type } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [page, setPage] = useState(1);
   const [answers, setAnswers] = useState({});
 
@@ -404,12 +477,13 @@ const Diagnosis = ({ session }) => {
     const averageScores = {};
     Object.keys(scores).forEach(key => { averageScores[key] = scores[key] / 4; });
     const resultTypeKey = determineType(averageScores);
+    const targetFriend = location.state?.targetFriend;
     if (session) {
       await supabase.from('diagnosis_results').insert({
-        target_user_id: session.user.id, created_by: session.user.id, result_key: resultTypeKey, scores: { ...averageScores, diagnosis_type: type }
+        target_user_id: targetFriend ? targetFriend.id : session.user.id, created_by: session.user.id, result_key: resultTypeKey, scores: { ...averageScores, diagnosis_type: type }
       });
     }
-    navigate('/result', { state: { resultKey: resultTypeKey, scores: averageScores } });
+    navigate('/result', { state: { resultKey: resultTypeKey, scores: averageScores, date: new Date().toISOString() } });
   };
 
   return (
@@ -428,11 +502,17 @@ const Diagnosis = ({ session }) => {
           <div key={q.id} className="diagnosis-question-item">
             <p>{q.text}</p>
             <div className="diagnosis-choices">
-              <img src={leftImg} className={`diagnosis-img diagnosis-img-1 ${answers[q.id] === 1 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 1)} alt="当てはまらない" />
+              <div className="diagnosis-choice-wrapper">
+                <img src={leftImg} className={`diagnosis-img diagnosis-img-1 ${answers[q.id] === 1 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 1)} alt="当てはまらない" />
+                <span className="diagnosis-label">そう思う</span>
+              </div>
               <img src={sLeftImg} className={`diagnosis-img diagnosis-img-2 ${answers[q.id] === 2 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 2)} alt="あまり当てはまらない" />
               <img src={midImg} className={`diagnosis-img diagnosis-img-3 ${answers[q.id] === 3 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 3)} alt="どちらともいえない" />
               <img src={sRightImg} className={`diagnosis-img diagnosis-img-4 ${answers[q.id] === 4 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 4)} alt="やや当てはまる" />
-              <img src={rightImg} className={`diagnosis-img diagnosis-img-5 ${answers[q.id] === 5 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 5)} alt="当てはまる" />
+              <div className="diagnosis-choice-wrapper">
+                <img src={rightImg} className={`diagnosis-img diagnosis-img-5 ${answers[q.id] === 5 ? 'selected' : ''}`} onClick={() => handleAnswer(q.id, 5)} alt="当てはまる" />
+                <span className="diagnosis-label">そう思わない</span>
+              </div>
             </div>
           </div>
         ))}
@@ -446,46 +526,211 @@ const Diagnosis = ({ session }) => {
 
 const Result = () => {
   const location = useLocation();
-  const { resultKey, scores } = location.state || { resultKey: 'soutyou', scores: {} };
+  const navigate = useNavigate();
+  const { resultKey, scores, date } = location.state || { resultKey: 'soutyou', scores: {}, date: null };
   const normalizedKey = KEY_MAPPING[resultKey] || resultKey;
   const resultData = DIAGNOSIS_TYPES[normalizedKey] || DIAGNOSIS_TYPES['soutyou'];
+  const resultImage = TYPE_IMAGES[normalizedKey] || homeImg;
+
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>診断結果: {TYPE_DISPLAY_NAMES[normalizedKey] || resultData.name}</h2>
-        {scores && <DiagnosisRadar scores={scores} />}
-        <p>{resultData.description}</p>
+    <div className="result-screen">
+      <div className="result-content">
+        <div className="compare-home" onClick={() => navigate('/')}></div>
+        <p className="result-small-text">{date ? new Date(date).toLocaleDateString() : 'あなたは…'}</p>
+        <div className="result-puzzle">
+          <img src={resultImage} className="result-puzzle-img" alt="result type" />
+        </div>
+        <div className="result-type-section">
+          <h1>{TYPE_DISPLAY_NAMES[normalizedKey] || resultData.name}</h1>
+          <div className="result-desc">
+            {scores && <DiagnosisRadar scores={scores} />}
+            <p>{resultData.description}</p>
+          </div>
+          <button className="result-main-btn" onClick={() => navigate('/friend-select')}>自分をみてもらう</button>
+        </div>
       </div>
-      <Link to="/" style={styles.secondaryButton}>ホームに戻る</Link>
     </div>
   );
 };
 
 const History = ({ session }) => {
   const [historyData, setHistoryData] = useState([]);
+  const [status, setStatus] = useState('loading'); // loading, animating, results, coming_soon
+  const [animImages, setAnimImages] = useState({ left: null, right: null });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const targetFriend = location.state?.targetFriend;
+
   useEffect(() => {
     if (!session) return;
     const fetchHistory = async () => {
-      const { data } = await supabase.from('diagnosis_results').select('*').eq('target_user_id', session.user.id).order('created_at', { ascending: false });
-      if (data) setHistoryData(data);
+      if (targetFriend) {
+        const { data: fromFriend } = await supabase
+          .from('diagnosis_results')
+          .select('*')
+          .eq('target_user_id', session.user.id)
+          .eq('created_by', targetFriend.id)
+          .order('created_at', { ascending: false });
+
+        const { data: mySelf } = await supabase
+          .from('diagnosis_results')
+          .select('*')
+          .eq('target_user_id', session.user.id)
+          .eq('created_by', session.user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (fromFriend && fromFriend.length > 0 && mySelf && mySelf.length > 0) {
+          const combined = [
+            ...(mySelf || []).map(d => ({ ...d, label: '自分の最新診断' })),
+            ...(fromFriend || []).map(d => ({ ...d, label: `${targetFriend.username} さんからの診断` }))
+          ];
+          setHistoryData(combined);
+
+          const myKey = mySelf[0].result_key;
+          const friendKey = fromFriend[0].result_key;
+          const leftImg = TYPE_IMAGES[KEY_MAPPING[myKey] || myKey] || homeImg;
+          const rightImg = TYPE_IMAGES[KEY_MAPPING[friendKey] || friendKey] || homeImg;
+          setAnimImages({ left: leftImg, right: rightImg });
+
+          setStatus('animating');
+          setTimeout(() => {
+            setStatus('results');
+          }, 2500);
+        } else {
+          setStatus('coming_soon');
+        }
+      } else {
+        const { data } = await supabase.from('diagnosis_results').select('*').eq('target_user_id', session.user.id).order('created_at', { ascending: false });
+        if (data) setHistoryData(data);
+        setStatus('results');
+      }
     };
     fetchHistory();
-  }, [session]);
+  }, [session, targetFriend]);
+
+  if (status === 'loading') return <div style={styles.container}>Loading...</div>;
+
+  if (status === 'coming_soon') {
+    return (
+      <div style={homeStyles.wrapper}>
+        <div className="friend-screen">
+          <div className="coming-soon-content">
+            <h1 style={{ fontSize: '32px', marginBottom: '10px', letterSpacing: '2px' }}>Coming Soon</h1>
+            <p style={{ fontSize: '14px', opacity: 0.9 }}>お互いの診断が揃うまでお待ちください</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'animating') {
+    return (
+      <div className="animation-overlay">
+        <img src={animImages.left} className="merge-icon left" alt="self" />
+        <img src={animImages.right} className="merge-icon right" alt="friend" />
+      </div>
+    );
+  }
+
+  // 比較画面（結果表示）
+  if (targetFriend && historyData.length === 2) {
+    const myData = historyData[0]; // 自分の診断 (Me -> Me)
+    const friendData = historyData[1]; // フレンドからの診断 (Friend -> Me)
+
+    const myKey = KEY_MAPPING[myData.result_key] || myData.result_key;
+    const friendKey = KEY_MAPPING[friendData.result_key] || friendData.result_key;
+
+    const myHour = TYPE_HOURS[myKey] !== undefined ? TYPE_HOURS[myKey] : 0;
+    const friendHour = TYPE_HOURS[friendKey] !== undefined ? TYPE_HOURS[friendKey] : 0;
+    
+    let timeDiff = Math.abs(myHour - friendHour);
+    if (timeDiff > 12) timeDiff = 24 - timeDiff;
+
+    const radarData = [
+      { subject: '開放性', A: myData.scores.O, B: friendData.scores.O, fullMark: 5 },
+      { subject: '誠実性', A: myData.scores.C, B: friendData.scores.C, fullMark: 5 },
+      { subject: '外向性', A: myData.scores.E, B: friendData.scores.E, fullMark: 5 },
+      { subject: '協調性', A: myData.scores.A, B: friendData.scores.A, fullMark: 5 },
+      { subject: '神経症', A: myData.scores.N, B: friendData.scores.N, fullMark: 5 },
+    ];
+
+    return (
+      <div className="compare-screen">
+        <div className="compare-header">
+          <div className="compare-home" onClick={() => navigate('/')}></div>
+          <h1>2人の景色</h1>
+        </div>
+
+        <div className="compare-puzzle-area">
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <img src={animImages.left} style={{ width: '160px', height: '160px', objectFit: 'contain', transform: 'translateX(23px)' }} alt="Me" />
+            <img src={animImages.right} style={{ width: '160px', height: '160px', objectFit: 'contain', transform: 'translateX(-22px)' }} alt="Friend" />
+          </div>
+          <div className="compare-names">
+            <div style={{ transform: 'translateX(25px)' }}>{session.user.user_metadata?.username || 'あなた'}<br /><span>（あなた）</span></div>
+            <div style={{ transform: 'translateX(5px)' }}>{targetFriend.username}<br /><span>（友達）</span></div>
+          </div>
+        </div>
+
+        <div className="compare-bottom-card">
+          <h2>二人のズレ</h2>
+          <div className="compare-time-title">
+            {timeDiff}時間
+            <div className="compare-underline"></div>
+          </div>
+
+          <div className="compare-radar">
+            <ResponsiveContainer>
+              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: '#666' }} />
+                <Radar name="Me" dataKey="A" stroke="#5078ff" fill="#5078ff" fillOpacity={0.4} />
+                <Radar name="Friend" dataKey="B" stroke="#ff78a0" fill="#ff78a0" fillOpacity={0.4} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="compare-result-cards">
+            <div className="compare-result" style={{ background: '#d6d3eb' }}> {/* 青っぽい背景に変更 */}
+              あなたから見た<br />あなた
+              <div className="compare-type">{TYPE_DISPLAY_NAMES[myKey]}</div>
+            </div>
+            <div className="compare-result">
+              {targetFriend.username}さんから見た<br />あなた
+              <div className="compare-type">{TYPE_DISPLAY_NAMES[friendKey]}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={styles.container}>
-      <h2>履歴</h2>
-      {historyData.map(item => {
-        const normalizedKey = KEY_MAPPING[item.result_key] || item.result_key;
-        return (
-          <div key={item.id} style={styles.card}>
-            <p>{new Date(item.created_at).toLocaleDateString()}</p>
-            <p>{TYPE_DISPLAY_NAMES[normalizedKey] || DIAGNOSIS_TYPES[normalizedKey]?.name}</p>
-            <DiagnosisRadar scores={item.scores} />
-          </div>
-        );
-      })}
-      <Link to="/" style={styles.secondaryButton}>ホームに戻る</Link>
+    <div className="history-screen">
+      <div className="history-header">
+        <div className="history-back" onClick={() => navigate('/')}></div>
+        <h1>友達との景色を見る</h1>
+      </div>
+
+      <div className="history-frame">
+        <div className="history-puzzle-wrapper">
+          {historyData.map((item) => {
+            const normalizedKey = KEY_MAPPING[item.result_key] || item.result_key;
+            const img = TYPE_IMAGES[normalizedKey] || homeImg;
+            return (
+              <img
+                key={item.id}
+                src={img}
+                className="history-puzzle-item"
+                alt="history"
+                onClick={() => navigate('/result', { state: { resultKey: item.result_key, scores: item.scores, date: item.created_at } })}
+              />
+            );
+          })}
+        </div>
+        <div className="history-unfinished"></div>
+      </div>
     </div>
   );
 };
@@ -508,6 +753,7 @@ function App() {
         <Route path="/result" element={<Result />} />
         <Route path="/history" element={<History session={session} />} />
         <Route path="/friends" element={<FriendSystem session={session} />} />
+        <Route path="/friend-select" element={<FriendSelect session={session} />} />
       </Routes>
     </Router>
   );
