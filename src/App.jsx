@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import './App.css';
 import { QUESTIONS, DIAGNOSIS_TYPES } from './questions';
@@ -50,7 +50,7 @@ const authStyles = {
   title: { position: 'absolute', top: '245px', left: '60px', fontSize: '34px', letterSpacing: '3px', color: '#2d2d5a', zIndex: 3, fontWeight: 'bold' },
   puzzleBig: { position: 'absolute', top: '300px', right: '40px', width: '120px', height: '120px', zIndex: 2, objectFit: 'contain', filter: 'drop-shadow(-6px -6px 5px rgba(0,0,0,0.2))' },
   puzzleSmall: { position: 'absolute', top: '180px', right: '100px', width: '60px', height: '60px', zIndex: 2, objectFit: 'contain', filter: 'drop-shadow(-6px 6px 5px rgba(0,0,0,0.2))' },
-  formContainer: { position: 'absolute', bottom: '80px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', zIndex: 10 },
+  formContainer: { position: 'absolute', bottom: '40px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', zIndex: 10 },
   input: { width: '260px', height: '44px', borderRadius: '22px', background: '#fff', border: 'none', paddingLeft: '20px', color: '#555', fontSize: '14px', boxShadow: '0 3px 6px rgba(0,0,0,0.08)', outline: 'none', boxSizing: 'border-box', fontFamily: '"Georgia", serif' },
   submitButton: { width: '260px', height: '44px', borderRadius: '22px', background: 'linear-gradient(to right, #aa92f8, #c4b3ff)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff', fontSize: '14px', border: 'none', cursor: 'pointer', fontFamily: '"Georgia", serif', boxShadow: '0 3px 6px rgba(0,0,0,0.2)', fontWeight: 'bold' },
   divider: { display: 'flex', alignItems: 'center', width: '260px', margin: '5px 0' },
@@ -66,11 +66,11 @@ const homeStyles = {
   screenBefore: { position: 'absolute', top: '-50%', left: 0, right: 0, bottom: '50%', backgroundImage: `url(${hosizoraImg})`, backgroundSize: 'cover', backgroundPosition: 'bottom', pointerEvents: 'none' },
   menu: { position: 'absolute', top: '40px', right: '24px', display: 'flex', flexDirection: 'column', gap: '6px', cursor: 'pointer', zIndex: 20 },
   menuSpan: { width: '24px', height: '3px', background: '#ddd', borderRadius: '3px' },
-  puzzleWrapper: { position: 'absolute', top: '140px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 },
+  puzzleWrapper: { position: 'absolute', top: '70px', left: '45%', transform: 'translateX(-50%)', zIndex: 10 },
   puzzle: { width: '210px', height: '210px', position: 'relative', filter: 'drop-shadow(0 8px 15px rgba(0,0,0,0.3))', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   puzzleImg: { width: '100%', height: '100%', objectFit: 'contain' },
-  title: { position: 'absolute', top: '380px', width: '100%', textAlign: 'center', color: 'white', fontSize: '20px', letterSpacing: '2px', zIndex: 10, fontWeight: 'bold' },
-  cards: { position: 'absolute', bottom: '60px', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', padding: '0 32px', boxSizing: 'border-box', zIndex: 10 },
+  title: { position: 'absolute', top: '300px', width: '100%', textAlign: 'center', color: 'white', fontSize: '20px', letterSpacing: '2px', zIndex: 10, fontWeight: 'bold' },
+  cards: { position: 'absolute', bottom: '40px', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', padding: '0 32px', boxSizing: 'border-box', zIndex: 10 },
   card: { height: '140px', background: '#d6d3eb', borderRadius: '28px', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none', position: 'relative', paddingTop: '30px', boxSizing: 'border-box' },
   cardText: { marginTop: '12px', fontSize: '14px', color: '#5e4f9a', fontWeight: 'bold', transform: 'translateY(-15px)' },
   iconBase: { width: '60px', height: '60px', borderRadius: '8px', position: 'relative', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', alignItems: 'center', transform: 'translateY(-5px)' },
@@ -305,9 +305,19 @@ const FriendSystem = ({ session }) => {
 
   const searchUser = async () => {
     setMessage(''); setSearchResult(null);
-    const { data, error } = await supabase.from('profiles').select('*').eq('search_id', searchId).single();
-    if (error || !data) setMessage('ユーザーが見つかりませんでした。');
-    else setSearchResult(data);
+    const { data: profile, error } = await supabase.from('profiles').select('*').eq('search_id', searchId).single();
+    if (error || !profile) {
+      setMessage('ユーザーが見つかりませんでした。');
+      return;
+    }
+
+    const { data: friendship } = await supabase
+      .from('friendships')
+      .select('status')
+      .or(`and(user_id.eq.${session.user.id},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${session.user.id})`)
+      .maybeSingle();
+
+    setSearchResult({ ...profile, friendshipStatus: friendship ? friendship.status : null });
   };
 
   const addFriend = async (friendId) => {
@@ -329,8 +339,8 @@ const FriendSystem = ({ session }) => {
   return (
     <div style={homeStyles.wrapper}>
       <div className="friend-screen">
+        <div className="compare-home" onClick={() => navigate('/')} style={{ top: '50px', zIndex: 20 }}></div>
         <div className="friend-content">
-          <div className="compare-home" onClick={() => navigate('/')}></div>
           <h1>フレンド追加</h1>
           <p>相手の検索IDを入力してください</p>
 
@@ -342,8 +352,16 @@ const FriendSystem = ({ session }) => {
 
           {searchResult && (
             <div style={{ marginTop: '20px', padding: '15px', background: '#eee', borderRadius: '10px', color: '#333', width: '280px', margin: '20px auto' }}>
-              <p style={{ fontSize: '1.1em' }}><strong>{searchResult.username}</strong> さん</p>
-              <button onClick={() => addFriend(searchResult.id)} style={{ ...styles.button, backgroundColor: '#8c7dc8' }}>申請する</button>
+              <p style={{ fontSize: '1.1em', color: '#000' }}><strong>{searchResult.username}</strong> さん</p>
+              {searchResult.id === session.user.id ? (
+                <p style={{ fontSize: '12px', color: '#666' }}>自分自身です</p>
+              ) : searchResult.friendshipStatus === 'accepted' ? (
+                <p style={{ fontSize: '12px', color: '#666' }}>既につながっています</p>
+              ) : searchResult.friendshipStatus === 'pending' ? (
+                <p style={{ fontSize: '12px', color: '#666' }}>申請中または承認待ちです</p>
+              ) : (
+                <button onClick={() => addFriend(searchResult.id)} style={{ ...styles.button, backgroundColor: '#8c7dc8' }}>申請する</button>
+              )}
             </div>
           )}
 
@@ -391,8 +409,8 @@ const FriendSelect = ({ session }) => {
   return (
     <div style={homeStyles.wrapper}>
       <div className="friend-screen">
+        <div className="compare-home" onClick={() => navigate('/')} style={{ top: '50px', zIndex: 20 }}></div>
         <div className="friend-content">
-          <div className="compare-home" onClick={() => navigate('/')}></div>
           <h1>友達を選択</h1>
           <p>診断する友達を選んでください</p>
           <div style={{ marginTop: '20px', width: '90%', margin: '20px auto', maxHeight: '500px', overflowY: 'auto' }}>
@@ -445,8 +463,10 @@ const Diagnosis = ({ session }) => {
   const { type } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const targetFriend = location.state?.targetFriend;
   const [page, setPage] = useState(1);
   const [answers, setAnswers] = useState({});
+  const screenRef = useRef(null);
 
   const questionsPerPage = 10;
   const totalPages = Math.ceil(QUESTIONS.length / questionsPerPage);
@@ -460,7 +480,9 @@ const Diagnosis = ({ session }) => {
   const handleNext = () => {
     if (page < totalPages) {
       setPage(page + 1);
-      window.scrollTo(0, 0);
+      if (screenRef.current) {
+        screenRef.current.scrollTo(0, 0);
+      }
     } else {
       finishDiagnosis();
     }
@@ -477,24 +499,23 @@ const Diagnosis = ({ session }) => {
     const averageScores = {};
     Object.keys(scores).forEach(key => { averageScores[key] = scores[key] / 4; });
     const resultTypeKey = determineType(averageScores);
-    const targetFriend = location.state?.targetFriend;
     if (session) {
       await supabase.from('diagnosis_results').insert({
         target_user_id: targetFriend ? targetFriend.id : session.user.id, created_by: session.user.id, result_key: resultTypeKey, scores: { ...averageScores, diagnosis_type: type }
       });
     }
-    navigate('/result', { state: { resultKey: resultTypeKey, scores: averageScores, date: new Date().toISOString() } });
+    navigate('/result', { state: { resultKey: resultTypeKey, scores: averageScores, date: new Date().toISOString(), isMine: true } });
   };
 
   return (
-    <div className="diagnosis-screen">
+    <div className="diagnosis-screen" ref={screenRef}>
       <div className="diagnosis-header">
         <div className="diagnosis-back" onClick={() => page > 1 ? setPage(page - 1) : navigate(-1)}></div>
         <div className="diagnosis-menu">
           <span></span><span></span><span></span>
         </div>
       </div>
-      <div className="diagnosis-subtitle">あなたへの質問</div>
+      <div className="diagnosis-subtitle">{targetFriend ? `${targetFriend.username} さんへの質問` : 'あなたへの質問'}</div>
       <div className="diagnosis-title">Question {page}/{totalPages}</div>
 
       <div className="diagnosis-card">
@@ -527,7 +548,7 @@ const Diagnosis = ({ session }) => {
 const Result = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { resultKey, scores, date } = location.state || { resultKey: 'soutyou', scores: {}, date: null };
+  const { resultKey, scores, date, isMine, friendName } = location.state || { resultKey: 'soutyou', scores: {}, date: null, isMine: true, friendName: '' };
   const normalizedKey = KEY_MAPPING[resultKey] || resultKey;
   const resultData = DIAGNOSIS_TYPES[normalizedKey] || DIAGNOSIS_TYPES['soutyou'];
   const resultImage = TYPE_IMAGES[normalizedKey] || homeImg;
@@ -535,15 +556,18 @@ const Result = () => {
   return (
     <div className="result-screen">
       <div className="result-content">
-        <div className="compare-home" onClick={() => navigate('/')}></div>
-        <p className="result-small-text">{date ? new Date(date).toLocaleDateString() : 'あなたは…'}</p>
+        <div className="compare-home" onClick={() => navigate('/history')}></div>
+        <p className="result-small-text">
+          {date ? new Date(date).toLocaleDateString() : 'あなたは…'}
+          {date && (isMine ? ' 自己診断' : ` ${friendName || '友達'}より`)}
+        </p>
         <div className="result-puzzle">
           <img src={resultImage} className="result-puzzle-img" alt="result type" />
         </div>
         <div className="result-type-section">
           <h1>{TYPE_DISPLAY_NAMES[normalizedKey] || resultData.name}</h1>
+          {scores && <DiagnosisRadar scores={scores} />}
           <div className="result-desc">
-            {scores && <DiagnosisRadar scores={scores} />}
             <p>{resultData.description}</p>
           </div>
           <button className="result-main-btn" onClick={() => navigate('/friend-select')}>自分をみてもらう</button>
@@ -567,14 +591,14 @@ const History = ({ session }) => {
       if (targetFriend) {
         const { data: fromFriend } = await supabase
           .from('diagnosis_results')
-          .select('*')
+          .select('*, profiles:created_by(username, search_id)')
           .eq('target_user_id', session.user.id)
           .eq('created_by', targetFriend.id)
           .order('created_at', { ascending: false });
 
         const { data: mySelf } = await supabase
           .from('diagnosis_results')
-          .select('*')
+          .select('*, profiles:created_by(username, search_id)')
           .eq('target_user_id', session.user.id)
           .eq('created_by', session.user.id)
           .order('created_at', { ascending: false })
@@ -601,7 +625,7 @@ const History = ({ session }) => {
           setStatus('coming_soon');
         }
       } else {
-        const { data } = await supabase.from('diagnosis_results').select('*').eq('target_user_id', session.user.id).order('created_at', { ascending: false });
+        const { data } = await supabase.from('diagnosis_results').select('*, profiles:created_by(username, search_id)').eq('target_user_id', session.user.id).order('created_at', { ascending: false });
         if (data) setHistoryData(data);
         setStatus('results');
       }
@@ -724,7 +748,7 @@ const History = ({ session }) => {
                 src={img}
                 className="history-puzzle-item"
                 alt="history"
-                onClick={() => navigate('/result', { state: { resultKey: item.result_key, scores: item.scores, date: item.created_at } })}
+                onClick={() => navigate('/result', { state: { resultKey: item.result_key, scores: item.scores, date: item.created_at, isMine: item.created_by === session.user.id, friendName: item.profiles?.username || item.profiles?.search_id || targetFriend?.username } })}
               />
             );
           })}
