@@ -1,10 +1,3 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -17,6 +10,138 @@
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
+
+/* --- 診断画面用スタイル --- */
+.diagnosis-screen {
+  width: 100%;
+  max-width: 375px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: linear-gradient(to bottom, #bfa9c9, #7b80c9);
+  position: relative;
+  overflow: hidden;
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+.diagnosis-header {
+  position: absolute;
+  top: 40px;
+  width: 100%;
+  z-index: 10;
+}
+
+.diagnosis-back {
+  position: absolute;
+  left: 24px;
+  width: 32px;
+  height: 32px;
+  border: 2px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.diagnosis-back::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(45deg);
+  top: 10px;
+  left: 11px;
+}
+
+.diagnosis-menu {
+  position: absolute;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.diagnosis-menu span {
+  width: 22px;
+  height: 2px;
+  background: white;
+}
+
+.diagnosis-subtitle {
+  position: absolute;
+  top: 90px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: white;
+  opacity: .8;
+}
+
+.diagnosis-title {
+  position: absolute;
+  top: 110px;
+  width: 100%;
+  text-align: center;
+  font-size: 28px;
+  font-style: italic;
+  color: #2e2157;
+}
+
+.diagnosis-card {
+  position: absolute;
+  top: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 580px;
+  background: #e6e4ee;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+  padding: 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.diagnosis-question-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.diagnosis-question-item p {
+  font-size: 13px;
+  text-align: center;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.diagnosis-choices {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* 選択肢画像ボタン */
+.diagnosis-img {
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  opacity: 0.6;
+}
+.diagnosis-img:hover { transform: scale(1.1); opacity: 0.8; }
+.diagnosis-img.selected { transform: scale(1.25); opacity: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+
+/* 個別のサイズ設定 */
+.diagnosis-img-1 { width: 45px; height: 45px; } /* 左端（大） */
+.diagnosis-img-2 { width: 35px; height: 35px; } /* 左中（中） */
+.diagnosis-img-3 { width: 25px; height: 25px; } /* 真ん中（小） */
+.diagnosis-img-4 { width: 35px; height: 35px; } /* 右中（中） */
+.diagnosis-img-5 { width: 45px; height: 45px; } /* 右端（大） */
+
+.diagnosis-next-btn { display: block; margin: 40px auto 10px auto; width: 200px; height: 40px; border: none; border-radius: 20px; background: #ddd; box-shadow: 0 3px 6px rgba(0,0,0,.2); font-size: 14px; color: #5e4f9a; cursor: pointer; }
+.diagnosis-next-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @keyframes logo-spin {
   from {
