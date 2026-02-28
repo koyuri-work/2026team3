@@ -73,7 +73,7 @@ const homeStyles = {
   puzzleWrapper: { position: 'absolute', top: '12vh', left: '45%', transform: 'translateX(-50%)', zIndex: 10 },
   puzzle: { width: '210px', height: '210px', position: 'relative', filter: 'drop-shadow(0 8px 15px rgba(0,0,0,0.3))', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   puzzleImg: { width: '100%', height: '100%', objectFit: 'contain' },
-  title: { position: 'absolute', top: '40vh', width: '100%', textAlign: 'center', color: 'white', fontSize: '20px', letterSpacing: '2px', zIndex: 10, fontWeight: 'bold' },
+  title: { position: 'absolute', top: 'calc(40vh + 20px)', width: '100%', textAlign: 'center', color: 'white', fontSize: '20px', letterSpacing: '2px', zIndex: 10, fontWeight: 'bold' },
   cards: { position: 'absolute', bottom: '40px', width: '100%', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', padding: '0 32px', boxSizing: 'border-box', zIndex: 10 },
   card: { height: '140px', background: '#d6d3eb', borderRadius: '28px', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none', position: 'relative', paddingTop: '30px', boxSizing: 'border-box' },
   cardText: { marginTop: '12px', fontSize: '14px', color: '#5e4f9a', fontWeight: 'bold', transform: 'translateY(-15px)' },
